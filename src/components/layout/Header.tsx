@@ -74,13 +74,6 @@ export default function Header() {
               )}
             </button>
 
-            <Link
-              href="/admin"
-              className="hidden rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700 sm:block"
-            >
-              Admin
-            </Link>
-
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-gray-700 md:hidden"
@@ -127,13 +120,6 @@ export default function Header() {
                 className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
               >
                 AI Tools
-              </Link>
-              <Link
-                href="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 rounded-lg bg-gray-900 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-700"
-              >
-                Admin Dashboard
               </Link>
             </nav>
           </div>

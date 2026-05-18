@@ -2,18 +2,47 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0d253d;
+  --primary: #533afd;
+  --primary-deep: #4434d4;
+  --primary-press: #2e2b8c;
+  --primary-soft: #665efd;
+  --ink: #0d253d;
+  --ink-mute: #64748d;
+  --canvas: #ffffff;
+  --canvas-soft: #f6f9fc;
+  --canvas-night: #000000;
+  --canvas-night-elevated: #0a0a0a;
+  --aloe: #c1fbd4;
+  --pistachio: #d4f9e0;
+  --hairline: #e3e8ee;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-primary: var(--primary);
+  --color-primary-deep: var(--primary-deep);
+  --color-primary-press: var(--primary-press);
+  --color-primary-soft: var(--primary-soft);
+  --color-ink: var(--ink);
+  --color-ink-mute: var(--ink-mute);
+  --color-canvas: var(--canvas);
+  --color-canvas-soft: var(--canvas-soft);
+  --color-canvas-night: var(--canvas-night);
+  --color-canvas-night-elevated: var(--canvas-night-elevated);
+  --color-aloe: var(--aloe);
+  --color-pistachio: var(--pistachio);
+  --color-hairline: var(--hairline);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-feature-settings: "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

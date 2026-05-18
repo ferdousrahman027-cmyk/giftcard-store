@@ -19,8 +19,8 @@ export default function CategoryFilter({
         onClick={() => onCategoryChange(null)}
         className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
           selectedCategory === null
-            ? "bg-indigo-600 text-white"
-            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            ? "bg-primary text-white"
+            : "bg-canvas-soft text-ink-mute hover:bg-hairline"
         }`}
       >
         All Products
@@ -31,8 +31,8 @@ export default function CategoryFilter({
           onClick={() => onCategoryChange(key)}
           className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             selectedCategory === key
-              ? "bg-indigo-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? "bg-primary text-white"
+              : "bg-canvas-soft text-ink-mute hover:bg-hairline"
           }`}
         >
           {label}

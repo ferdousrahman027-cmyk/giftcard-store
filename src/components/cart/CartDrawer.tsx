@@ -26,14 +26,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         }`}
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-hairline px-6 py-4">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-indigo-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Your Cart</h2>
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-medium text-ink">Your Cart</h2>
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-full p-1.5 text-ink-mute transition-colors hover:bg-canvas-soft hover:text-ink"
             >
               <X className="h-5 w-5" />
             </button>
@@ -41,13 +41,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
           {items.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center px-6">
-              <ShoppingBag className="h-16 w-16 text-gray-300" />
-              <p className="mt-4 text-lg font-medium text-gray-500">Your cart is empty</p>
-              <p className="mt-1 text-sm text-gray-400">Add some products to get started!</p>
+              <ShoppingBag className="h-16 w-16 text-hairline" />
+              <p className="mt-4 text-lg font-light text-ink-mute">Your cart is empty</p>
+              <p className="mt-1 text-sm text-ink-mute/60">Add some products to get started!</p>
               <Link
                 href="/shop"
                 onClick={onClose}
-                className="mt-6 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+                className="mt-6 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-deep"
               >
                 Browse Products
               </Link>
@@ -55,7 +55,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           ) : (
             <>
               <div className="flex-1 overflow-y-auto px-6 py-4">
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {items.map((item) => {
                     const product = getProductById(item.productId);
                     if (!product) return null;
@@ -66,9 +66,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     return (
                       <div
                         key={`${item.productId}-${item.denomination}`}
-                        className="flex gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4"
+                        className="flex gap-4 rounded-xl border border-hairline bg-canvas-soft p-4"
                       >
-                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-white text-2xl shadow-sm">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white text-2xl">
                           {product.brand === "Apple" && "🍎"}
                           {product.brand === "Steam" && "🎮"}
                           {product.brand === "Google" && "▶️"}
@@ -81,11 +81,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <div className="flex flex-1 flex-col">
                           <div className="flex items-start justify-between">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-sm font-medium text-ink">{product.name}</p>
+                              <p className="text-xs tabular-nums text-ink-mute">
                                 {formatPrice(item.denomination)}
                                 {product.discount && (
-                                  <span className="ml-1 text-green-600">
+                                  <span className="ml-1 text-emerald-600">
                                     (-{product.discount}%)
                                   </span>
                                 )}
@@ -93,7 +93,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             </div>
                             <button
                               onClick={() => removeItem(item.productId, item.denomination)}
-                              className="text-gray-400 transition-colors hover:text-red-500"
+                              className="text-ink-mute transition-colors hover:text-red-500"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -108,11 +108,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                     item.quantity - 1
                                   )
                                 }
-                                className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-300 text-gray-500 transition-colors hover:bg-gray-100"
+                                className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-mute transition-colors hover:bg-white"
                               >
                                 <Minus className="h-3 w-3" />
                               </button>
-                              <span className="w-8 text-center text-sm font-medium">
+                              <span className="w-8 text-center text-sm font-medium tabular-nums text-ink">
                                 {item.quantity}
                               </span>
                               <button
@@ -123,12 +123,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                     item.quantity + 1
                                   )
                                 }
-                                className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-300 text-gray-500 transition-colors hover:bg-gray-100"
+                                className="flex h-7 w-7 items-center justify-center rounded-full border border-hairline text-ink-mute transition-colors hover:bg-white"
                               >
                                 <Plus className="h-3 w-3" />
                               </button>
                             </div>
-                            <p className="text-sm font-semibold text-gray-900">
+                            <p className="text-sm font-medium tabular-nums text-ink">
                               {formatPrice(unitPrice * item.quantity)}
                             </p>
                           </div>
@@ -139,23 +139,23 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 px-6 py-4">
+              <div className="border-t border-hairline px-6 py-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-medium text-gray-700">Total</span>
-                  <span className="text-xl font-bold text-gray-900">
+                  <span className="text-sm font-medium text-ink-mute">Total</span>
+                  <span className="text-xl font-semibold tabular-nums text-ink">
                     {formatPrice(totalPrice)}
                   </span>
                 </div>
                 <Link
                   href="/checkout"
                   onClick={onClose}
-                  className="mt-4 block w-full rounded-lg bg-indigo-600 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
+                  className="mt-4 block w-full rounded-full bg-primary py-3 text-center text-sm font-medium text-white transition-colors hover:bg-primary-deep"
                 >
                   Proceed to Checkout
                 </Link>
                 <button
                   onClick={clearCart}
-                  className="mt-2 w-full rounded-lg border border-gray-300 py-2.5 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  className="mt-2 w-full rounded-full border border-hairline py-2.5 text-center text-sm font-medium text-ink-mute transition-colors hover:bg-canvas-soft"
                 >
                   Clear Cart
                 </button>

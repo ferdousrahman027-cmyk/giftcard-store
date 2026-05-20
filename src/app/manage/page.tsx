@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import {
   DollarSign,
   ShoppingCart,
@@ -8,9 +9,20 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Clock,
+  RefreshCw,
 } from "lucide-react";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+import { Order } from "@/types";
+import { formatPrice } from "@/lib/utils";
 
-const stats = [
+const statusStyles: Record<string, string> = {
+  completed: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20",
+  processing: "bg-blue-50 text-blue-700 ring-1 ring-blue-600/20",
+  pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20",
+  cancelled: "bg-red-50 text-red-700 ring-1 ring-red-600/20",
+};
+
+const fallbackStats = [
   {
     name: "Total Revenue",
     value: "$12,450",
@@ -49,72 +61,105 @@ const stats = [
   },
 ];
 
-const recentOrders = [
-  {
-    id: "ORD-M2K8X-A1B2",
-    customer: "Alex Johnson",
-    product: "Apple Gift Card",
-    amount: "$50.00",
-    status: "completed",
-    date: "2 min ago",
-  },
-  {
-    id: "ORD-N3L9Y-C4D5",
-    customer: "Sarah Chen",
-    product: "Netflix Subscription",
-    amount: "$15.20",
-    status: "processing",
-    date: "15 min ago",
-  },
-  {
-    id: "ORD-P4M0Z-E6F7",
-    customer: "Mike Wilson",
-    product: "Steam Gift Card",
-    amount: "$100.00",
-    status: "completed",
-    date: "1 hour ago",
-  },
-  {
-    id: "ORD-Q5N1A-G8H9",
-    customer: "Emily Davis",
-    product: "ChatGPT Plus",
-    amount: "$20.00",
-    status: "pending",
-    date: "2 hours ago",
-  },
-  {
-    id: "ORD-R6O2B-I0J1",
-    customer: "James Brown",
-    product: "Google Play Gift Card",
-    amount: "$25.00",
-    status: "completed",
-    date: "3 hours ago",
-  },
-];
-
-const topProducts = [
-  { name: "Apple Gift Card", sales: 342, revenue: "$14,520", percent: 100 },
-  { name: "Steam Gift Card", sales: 280, revenue: "$11,200", percent: 82 },
-  { name: "Netflix Subscription", sales: 256, revenue: "$3,891", percent: 75 },
-  { name: "ChatGPT Plus", sales: 198, revenue: "$3,960", percent: 58 },
-  { name: "Google Play Gift Card", sales: 165, revenue: "$5,280", percent: 48 },
-];
-
-const statusStyles: Record<string, string> = {
-  completed: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20",
-  processing: "bg-blue-50 text-blue-700 ring-1 ring-blue-600/20",
-  pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20",
-  cancelled: "bg-red-50 text-red-700 ring-1 ring-red-600/20",
-};
-
 export default function ManageDashboard() {
+  const { adminEmail } = useAdminAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!adminEmail) return;
+
+      setLoading(true);
+      try {
+        const res = await fetch("/api/orders?all=true", {
+          headers: { "x-admin-email": adminEmail },
+        });
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.orders)) {
+          setOrders(data.orders);
+        } else {
+          setOrders([]);
+        }
+      } catch {
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [adminEmail]);
+
+  const recentOrders = useMemo(() => orders.slice(0, 5), [orders]);
+
+  const stats = useMemo(() => {
+    const totalOrders = orders.length;
+    const totalRevenue = orders
+      .filter((order) => order.status === "completed")
+      .reduce((sum, order) => sum + order.total, 0);
+
+    const totalItems = orders.reduce(
+      (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+      0
+    );
+
+    const completed = orders.filter((order) => order.status === "completed").length;
+    const conversionRate = totalOrders > 0 ? ((completed / totalOrders) * 100).toFixed(1) : "0.0";
+
+    return [
+      {
+        name: "Total Revenue",
+        value: formatPrice(totalRevenue),
+        change: orders.length > 0 ? `+${totalOrders} orders` : "No orders yet",
+        trend: "up" as const,
+        icon: DollarSign,
+        gradient: "from-indigo-500 to-indigo-600",
+        shadowColor: "shadow-indigo-500/25",
+      },
+      {
+        name: "Total Orders",
+        value: String(totalOrders),
+        change: orders.length > 0 ? "Live data" : "No orders yet",
+        trend: "up" as const,
+        icon: ShoppingCart,
+        gradient: "from-emerald-500 to-emerald-600",
+        shadowColor: "shadow-emerald-500/25",
+      },
+      {
+        name: "Products Sold",
+        value: String(totalItems),
+        change: orders.length > 0 ? "Live data" : "No orders yet",
+        trend: "up" as const,
+        icon: Package,
+        gradient: "from-violet-500 to-violet-600",
+        shadowColor: "shadow-violet-500/25",
+      },
+      {
+        name: "Conversion Rate",
+        value: `${conversionRate}%`,
+        change: orders.length > 0 ? "From completed orders" : "No orders yet",
+        trend: totalOrders > 0 ? "up" : "down",
+        icon: TrendingUp,
+        gradient: "from-amber-500 to-amber-600",
+        shadowColor: "shadow-amber-500/25",
+      },
+    ];
+  }, [orders]);
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Welcome back! Here&apos;s an overview of your store.
-        </p>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Welcome back! Here&apos;s an overview of your store.
+          </p>
+        </div>
+        <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
+          <RefreshCw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+          {loading ? "Refreshing" : "Live"}
+        </button>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -156,7 +201,7 @@ export default function ManageDashboard() {
             <h2 className="text-base font-semibold text-slate-900">Recent Orders</h2>
             <div className="flex items-center gap-1.5 text-xs text-slate-400">
               <Clock className="h-3.5 w-3.5" />
-              Updated just now
+              {orders.length > 0 ? "Updated just now" : "Waiting for orders"}
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -165,39 +210,52 @@ export default function ManageDashboard() {
                 <tr className="border-b border-slate-100 text-left text-xs font-medium text-slate-500">
                   <th className="px-6 py-3">Order</th>
                   <th className="px-6 py-3">Customer</th>
-                  <th className="px-6 py-3">Product</th>
+                  <th className="px-6 py-3">Items</th>
                   <th className="px-6 py-3">Amount</th>
                   <th className="px-6 py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {recentOrders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50/50"
-                  >
-                    <td className="px-6 py-3.5">
-                      <p className="text-xs font-semibold text-slate-900">{order.id}</p>
-                      <p className="text-[11px] text-slate-400">{order.date}</p>
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <p className="text-sm text-slate-700">{order.customer}</p>
-                    </td>
-                    <td className="px-6 py-3.5 text-sm text-slate-600">{order.product}</td>
-                    <td className="px-6 py-3.5 text-sm font-semibold text-slate-900">
-                      {order.amount}
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${
-                          statusStyles[order.status] ?? "bg-slate-50 text-slate-700"
-                        }`}
-                      >
-                        {order.status}
-                      </span>
+                {recentOrders.length === 0 ? (
+                  <tr>
+                    <td className="px-6 py-8 text-sm text-slate-500" colSpan={5}>
+                      No orders have been placed yet.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  recentOrders.map((order) => (
+                    <tr
+                      key={order.id}
+                      className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50/50"
+                    >
+                      <td className="px-6 py-3.5">
+                        <p className="text-xs font-semibold text-slate-900">{order.id}</p>
+                        <p className="text-[11px] text-slate-400">
+                          {new Date(order.createdAt).toLocaleString()}
+                        </p>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <p className="text-sm text-slate-700">{order.customerName}</p>
+                        <p className="text-xs text-slate-500">{order.customerEmail}</p>
+                      </td>
+                      <td className="px-6 py-3.5 text-sm text-slate-600">
+                        {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                      </td>
+                      <td className="px-6 py-3.5 text-sm font-semibold text-slate-900">
+                        {formatPrice(order.total)}
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${
+                            statusStyles[order.status] ?? "bg-slate-50 text-slate-700"
+                          }`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -209,7 +267,13 @@ export default function ManageDashboard() {
           </div>
           <div className="p-4">
             <div className="space-y-3">
-              {topProducts.map((product, index) => (
+              {[
+                { name: "Apple Gift Card", sales: 342, revenue: "$14,520", percent: 100 },
+                { name: "Steam Gift Card", sales: 280, revenue: "$11,200", percent: 82 },
+                { name: "Netflix Subscription", sales: 256, revenue: "$3,891", percent: 75 },
+                { name: "ChatGPT Plus", sales: 198, revenue: "$3,960", percent: 58 },
+                { name: "Google Play Gift Card", sales: 165, revenue: "$5,280", percent: 48 },
+              ].map((product, index) => (
                 <div key={product.name} className="rounded-xl bg-slate-50/80 p-3.5">
                   <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -217,15 +281,11 @@ export default function ManageDashboard() {
                         {index + 1}
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          {product.name}
-                        </p>
+                        <p className="text-sm font-medium text-slate-900">{product.name}</p>
                         <p className="text-xs text-slate-500">{product.sales} sales</p>
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-slate-900">
-                      {product.revenue}
-                    </span>
+                    <span className="text-sm font-bold text-slate-900">{product.revenue}</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
                     <div

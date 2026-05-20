@@ -1,7 +1,17 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Search, Download, Eye, Clock, CheckCircle2, AlertCircle, XCircle, RefreshCw } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import {
+  Search,
+  Download,
+  Eye,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  RefreshCw,
+  ShieldAlert,
+} from "lucide-react";
 import { Order } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { useAdminAuth } from "@/context/AdminAuthContext";
@@ -24,30 +34,44 @@ export default function ManageOrdersPage() {
   const { adminEmail } = useAdminAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
+    if (!adminEmail) {
+      return;
+    }
+
     setLoading(true);
+    setError("");
+
     try {
       const res = await fetch("/api/orders?all=true", {
-        headers: { "x-admin-email": adminEmail || "" },
+        headers: { "x-admin-email": adminEmail },
       });
       const data = await res.json();
-      if (data.orders) {
-        setOrders(data.orders);
+
+      if (!res.ok) {
+        setOrders([]);
+        setError(data.error || "Unable to load orders");
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
+
+      setOrders(Array.isArray(data.orders) ? data.orders : []);
+    } catch (fetchError) {
+      console.error("Error fetching orders:", fetchError);
+      setOrders([]);
+      setError("Failed to load orders");
     } finally {
       setLoading(false);
     }
-  };
+  }, [adminEmail]);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -56,8 +80,7 @@ export default function ManageOrdersPage() {
           order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
-      const matchesStatus =
-        statusFilter === "all" ? true : order.status === statusFilter;
+      const matchesStatus = statusFilter === "all" ? true : order.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [orders, searchQuery, statusFilter]);
@@ -82,13 +105,10 @@ export default function ManageOrdersPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Orders</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            View and manage customer orders
-          </p>
+          <p className="mt-1 text-sm text-slate-500">View and manage customer orders</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -105,7 +125,6 @@ export default function ManageOrdersPage() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <p className="text-xs font-medium text-slate-500">Total Orders</p>
@@ -125,7 +144,6 @@ export default function ManageOrdersPage() {
         </div>
       </div>
 
-      {/* Search & Filter */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -150,14 +168,20 @@ export default function ManageOrdersPage() {
         </select>
       </div>
 
-      {/* Orders Table */}
+      {error && (
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <ShieldAlert className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
       {filteredOrders.length === 0 ? (
         <div className="rounded-2xl bg-white p-12 text-center shadow-sm">
           <AlertCircle className="mx-auto h-12 w-12 text-slate-300" />
           <h3 className="mt-4 text-lg font-medium text-slate-900">No orders found</h3>
           <p className="mt-1 text-sm text-slate-500">
             {orders.length === 0
-              ? "No orders have been placed yet."
+              ? error || "No orders have been placed yet."
               : "Try adjusting your search or filter."}
           </p>
         </div>
@@ -188,9 +212,7 @@ export default function ManageOrdersPage() {
                         <p className="text-sm font-semibold text-slate-900">{order.id}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm font-medium text-slate-900">
-                          {order.customerName}
-                        </p>
+                        <p className="text-sm font-medium text-slate-900">{order.customerName}</p>
                         <p className="text-xs text-slate-500">{order.customerEmail}</p>
                       </td>
                       <td className="px-6 py-4">
@@ -199,9 +221,7 @@ export default function ManageOrdersPage() {
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-bold text-slate-900">
-                          {formatPrice(order.total)}
-                        </span>
+                        <span className="text-sm font-bold text-slate-900">{formatPrice(order.total)}</span>
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -243,7 +263,6 @@ export default function ManageOrdersPage() {
         </div>
       )}
 
-      {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -265,7 +284,9 @@ export default function ManageOrdersPage() {
               </div>
               <div className="flex justify-between rounded-lg bg-slate-50 p-3">
                 <span className="text-sm text-slate-600">Status</span>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusStyles[selectedOrder.status]}`}>
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${statusStyles[selectedOrder.status]}`}
+                >
                   {selectedOrder.status}
                 </span>
               </div>
@@ -286,7 +307,9 @@ export default function ManageOrdersPage() {
                       <p className="text-sm font-medium text-slate-900">{formatPrice(item.denomination)} card</p>
                       <p className="text-xs text-slate-500">Qty: {item.quantity}</p>
                     </div>
-                    <p className="text-sm font-bold text-slate-900">{formatPrice(item.denomination * item.quantity)}</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {formatPrice(item.denomination * item.quantity)}
+                    </p>
                   </div>
                 ))}
               </div>

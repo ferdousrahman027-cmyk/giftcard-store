@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { products as defaultProducts } from "@/data/products";
 import { Product } from "@/types";
+import { isAdminRequest } from "@/lib/admin-auth";
 import fs from "fs";
 import path from "path";
 
@@ -40,9 +41,13 @@ export async function GET() {
 }
 
 /**
- * POST /api/products - Add a new product
+ * POST /api/products - Add a new product (admin only)
  */
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { name, slug, description, longDescription, category, brand, denominations, featured, popular, discount, tags } = body;
@@ -79,9 +84,13 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * PUT /api/products - Update a product
+ * PUT /api/products - Update a product (admin only)
  */
 export async function PUT(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { id, ...updates } = body;
@@ -108,9 +117,13 @@ export async function PUT(request: NextRequest) {
 }
 
 /**
- * DELETE /api/products - Delete a product
+ * DELETE /api/products - Delete a product (admin only)
  */
 export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

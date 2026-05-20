@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Product, ProductCategory, CATEGORY_LABELS } from "@/types";
 import { formatPrice } from "@/lib/utils";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 
 type ProductForm = {
   id?: string;
@@ -64,6 +65,7 @@ const categoryIcons: Record<ProductCategory, typeof Gift> = {
 };
 
 export default function ManageProductsPage() {
+  const { adminEmail } = useAdminAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -178,7 +180,7 @@ export default function ManageProductsPage() {
         // UPDATE
         const res = await fetch("/api/products", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-admin-email": adminEmail || "" },
           body: JSON.stringify({
             id: editingProduct.id,
             name: form.name,
@@ -205,7 +207,7 @@ export default function ManageProductsPage() {
         // CREATE
         const res = await fetch("/api/products", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-admin-email": adminEmail || "" },
           body: JSON.stringify({
             name: form.name,
             slug,
@@ -245,6 +247,7 @@ export default function ManageProductsPage() {
     try {
       const res = await fetch(`/api/products?id=${productId}`, {
         method: "DELETE",
+        headers: { "x-admin-email": adminEmail || "" },
       });
 
       if (res.ok) {

@@ -3,7 +3,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { type CartItem } from "@/types";
 import { getProductById } from "@/data/products";
-import { createOrder } from "@/data/orders";
 
 interface CartContextType {
   items: CartItem[];
@@ -86,16 +85,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const placeOrder = async (email: string, name: string): Promise<string | null> => {
     if (items.length === 0) return null;
 
-    const order = createOrder({
-      items: [...items],
-      total: totalPrice,
-      status: "pending",
-      customerEmail: email,
-      customerName: name,
-    });
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          name,
+          items: [...items],
+          total: totalPrice,
+        }),
+      });
 
-    clearCart();
-    return order.id;
+      if (res.ok) {
+        const data = await res.json();
+        clearCart();
+        return data.order.id;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error placing order:", error);
+      return null;
+    }
   };
 
   return (

@@ -34,11 +34,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (email: string, password: string): boolean => {
-    if (
-      ADMIN_PASSWORD &&
-      email === ADMIN_EMAIL &&
-      password === ADMIN_PASSWORD
-    ) {
+    // Dev mode: if no password is set, allow any login with correct email
+    const passwordValid = ADMIN_PASSWORD
+      ? password === ADMIN_PASSWORD
+      : true;
+
+    if (email === ADMIN_EMAIL && passwordValid) {
       setIsAuthenticated(true);
       setAdminEmail(email);
       sessionStorage.setItem("gifthub_admin", JSON.stringify({ email }));

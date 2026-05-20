@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { type CartItem } from "@/types";
 import { getProductById } from "@/data/products";
+import { createOrder } from "@/data/orders";
 
 interface CartContextType {
   items: CartItem[];
@@ -14,6 +15,7 @@ interface CartContextType {
   totalPrice: number;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  placeOrder: (email: string, name: string) => Promise<string | null>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -81,6 +83,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return sum + price * item.quantity;
   }, 0);
 
+  const placeOrder = async (email: string, name: string): Promise<string | null> => {
+    if (items.length === 0) return null;
+
+    const order = createOrder({
+      items: [...items],
+      total: totalPrice,
+      status: "pending",
+      customerEmail: email,
+      customerName: name,
+    });
+
+    clearCart();
+    return order.id;
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -93,6 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalPrice,
         isCartOpen,
         setIsCartOpen,
+        placeOrder,
       }}
     >
       {children}
